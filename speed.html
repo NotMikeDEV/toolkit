@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+	<head>
+		<title>Toolkit Speed Test</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<LINK rel='stylesheet' href='https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css' />
+		<LINK rel='stylesheet' href='https://code.jquery.com/ui/1.12.1/themes/sunny/jquery-ui.css' />
+		<SCRIPT src='https://code.jquery.com/jquery-1.12.4.js'></SCRIPT>
+		<SCRIPT src='https://code.jquery.com/ui/1.12.1/jquery-ui.js'></SCRIPT>
+	        <script>
+$.ajax({
+	url: "/whoami/",
+	method: 'POST'
+}).done(function(data) {
+	$("#who").html(data);
+});
+
+var DownloadSize=102400;
+var DownloadTime=new Date();
+var SendDownloadRequest=false;
+var UploadSize=102400;
+var UploadTime=new Date();
+var SendUploadRequest=false;
+var DownloadResponse = function (data) {
+	var PacketTime=new Date()-DownloadTime;
+	var Size=data.length;
+	var Speed = Size/PacketTime*8;
+	$('#download').html("<b>Running download test</b> " + Math.floor(Size/1000) + "Kb in " + PacketTime + "ms = " + Math.floor(Speed/10)/100 + "Mbit");
+	if (PacketTime < 1000)
+	{
+		DownloadSize *= 4;
+		SendDownloadRequest();
+	}
+	else if (PacketTime < 8000)
+	{
+		DownloadSize *= 2;
+		SendDownloadRequest();
+	}
+	else
+	{
+		$('#download').empty();
+		$('#download').append($('<H1>').text("Download Speed " + Math.floor(Speed/10)/100 + "Mbit"));
+		SendUploadRequest();
+	}
+};
+SendDownloadRequest = function(Size){
+	DownloadTime=false;
+	$.ajax({
+		url: "/speed/down/" + DownloadSize,
+		xhrFields: {
+			onprogress: function(e)
+			{
+				if (!DownloadTime)
+					DownloadTime=new Date();
+			}
+		},
+	}).done(DownloadResponse);
+};
+SendDownloadRequest();
+
+var UploadResponse = function (data) {
+	$('#upload').text("Upload test " + data);
+	var PacketTime=new Date()-UploadTime;
+	var Size=data;
+	var Speed = Size/PacketTime*8;
+	$('#upload').html("<b>Running upload test</b> " + Math.floor(Size/1000) + "Kb in " + PacketTime + "ms = " + Math.floor(Speed/10)/100 + "Mbit");
+	if (PacketTime < 1000)
+	{
+		UploadSize *= 4;
+		SendUploadRequest();
+	}
+	else if (PacketTime < 8000)
+	{
+		UploadSize *= 2;
+		SendUploadRequest();
+	}
+	else
+	{
+		$('#upload').empty();
+		$('#upload').append($('<H1>').text("Upload Speed " + Math.floor(Speed/10)/100 + "Mbit"));
+	}
+};
+SendUploadRequest = function(Size){
+	var UploadData = "";
+	for (var x=0;x<UploadSize; x++)
+		UploadData += String.fromCharCode(Math.random()*128);
+	UploadTime = new Date();
+	$.ajax({
+		url: "/speed/up",
+		method: "POST",
+		contentType: 'application/octet-stream',
+		processData: false,
+		data: UploadData,
+	}).done(UploadResponse);
+};
+		</script>
+	</head>
+	<body>
+		<DIV id="header"><SCRIPT>$(function(){$.ajax({url: "/header.html",}).done(function(data) {$('#header').html(data);});})</SCRIPT></DIV>
+		<div>
+			<div id="who"></div>
+			<div id="download"></div>
+			<div id="upload"></div>
+		</div>
+	</body>
+</html>

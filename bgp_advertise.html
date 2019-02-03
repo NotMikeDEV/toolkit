@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>BGP Test Announcer</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<LINK rel='stylesheet' href='https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css' />
+		<LINK rel='stylesheet' href='https://code.jquery.com/ui/1.12.1/themes/sunny/jquery-ui.css' />
+		<SCRIPT src='https://code.jquery.com/jquery-1.12.4.js'></SCRIPT>
+		<SCRIPT src='https://code.jquery.com/ui/1.12.1/jquery-ui.js'></SCRIPT>
+		<SCRIPT>
+$(function (){
+	var BGPSocket = new WebSocket("wss://" + location.host + "/bgp_advertise/", "bgp_advertise");
+	BGPSocket.onerror = function(err) {
+		$('#page').empty().text("Error. Something went wrong.");
+	}
+	BGPSocket.onopen = function() {
+		console.log("BGPSocket", "Open");
+	};
+	BGPSocket.onclose = function() {
+		console.log("BGPSocket", "Close");
+	}
+	var PeerDIVs={};
+	BGPSocket.onmessage = function (evt) {
+		var Length = evt.data.length
+		var Data = JSON.parse(evt.data);
+		console.log("BGPSocket", Data);
+		if (Data.Prefix)
+		{
+			$('#page').empty().dialog({
+				modal: false,
+				title: "BGP Advertisments for prefix " + Data.Prefix,
+				width: 800,
+				height: 600,
+				close: function(){
+					$('#page').empty().text("Disconnected.");
+					setTimeout(function(){location.reload();}, 1000);
+				}
+			}).css("overflow: scroll");
+			BGPSocket.onclose = function() {
+				$('#page').empty().dialog("close");
+				console.log("BGPSocket", "Close");
+			}
+			var Header = $('<pre>').appendTo($('#page')).text("Traceroute Address: ").append($('<B>').text(Data.Prefix.split("/")[0]));
+		}
+		if (Data.Peer)
+		{
+			if (!PeerDIVs[Data.Peer.Name])
+			{
+				var Peer = Data.Peer;
+				var PeerDIV = PeerDIVs[Data.Peer.Name] = $('<DIV>').appendTo($('#page'))
+					.css("display", "inline-block").css("vertical-align", "top").css("margin", "10px").css("border", "1px #999 dashed").width(200);
+				$('<DIV>').appendTo(PeerDIV).css("background", "#BBB").css("font-size", "24px").text(Peer.Name);
+				var EnableDIV = $('<DIV>').appendTo(PeerDIV);
+				var Enabled = $('<INPUT>').appendTo(EnableDIV).prop("type", "checkbox");
+				$('<SPAN>').appendTo(EnableDIV).text("Enable Advertisment");
+				var Input = $('<INPUT>').appendTo(PeerDIV).prop("placeholder", "Community:Value").width(190);
+				var Communities={};
+				var SendUpdate=function(){
+					BGPSocket.send(JSON.stringify({Peer:{
+							Name: Data.Peer.Name,
+							Enabled: Enabled[0].checked,
+							Communities: Communities,
+					}}));
+				};
+				Enabled.on('change', SendUpdate);
+				var AddCommunity=(function(PeerDIV, Peer){return function(){
+					var Community = Input.val();
+					if (Community == (Math.floor(Community.split(":")[0]) + ":" + Math.floor(Community.split(":")[1])))
+					{
+						Communities[Community] = Community;
+						var DIV = $('<DIV>').appendTo(PeerDIV).css("line-height", "30px").css("text-align", "right").text(Community);
+						var Remove = $('<BUTTON>').appendTo(DIV).css("float", "right").text("X");
+						Input.val("");
+						SendUpdate();
+					}
+					else
+					{
+						alert("Invalid Community.\n\nFormat should be NNN:NNN");
+					}
+				};})(PeerDIV, Peer);
+				var AddButton = $('<BUTTON>').appendTo(PeerDIV).text("Add").button().width(163);
+				AddButton.click(AddCommunity);
+			}
+		}
+	};
+});
+
+		</SCRIPT>
+	</head>
+	<body>
+		<DIV id="header"><SCRIPT>$(function(){$.ajax({url: "/header.html",}).done(function(data) {$('#header').html(data);});})</SCRIPT></DIV>
+		<div id="page">Connecting to server...</div>
+	</body>
+</html>
