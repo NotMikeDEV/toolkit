@@ -26,11 +26,6 @@ AddProxies(ToolkitAS206671)
 local ToolkitM6XCV = caddy:AddWebsite{hostname='toolkit.m6xcv.uk', port=443, root='/tools/'}
 AddProxies(ToolkitAS206671)
 
-local ToolkitMikeJonesIn = caddy:AddWebsite{hostname='toolkit.mikejones.in', port=443, root='/var/www/html'}
-ToolkitMikeJonesIn:AddRedirect{source='/', target='https://tools.as206671.uk{uri}'}
-local ToolkitAS206671 = caddy:AddWebsite{hostname='toolkit.as206671.uk', port=443, root='/var/www/html'}
-ToolkitAS206671:AddRedirect{source='/', target='https://tools.as206671.uk{uri}'}
-
 network:AddNameserver('9.9.9.9')
 
 function background()
