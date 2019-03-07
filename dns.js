@@ -3,24 +3,6 @@ fs = require('fs');
 
 var dns = require('native-dns');
 
-var SelectRoot = function() {
-	var Nodes = [
-		"2001:dc3::35",
-		"2001:7fd::1",
-		"2001:503:c27::2:30",
-		"2001:500:2::c",
-		"2001:500:2f::f",
-		"2001:500:9f::42",
-		"2001:500:12::d0d",
-		"2001:500:200::b",
-		"2001:500:1::53",
-		"2001:500:a8::e",
-		"2001:503:ba3e::2:30",
-		"2001:500:2d::d",
-		"2001:7fe::53",
-	];
-	return Nodes[Math.floor(Math.random()*13)];
-};
 module.exports = {
 	HTTP: function(req, res, startTime, URL, Path, bodyFilename, bodyLength, SendReply) {
 		if (Path.length == 2)
@@ -47,9 +29,9 @@ module.exports = {
 					require('dns').lookup(Data.Server, function(err, Server, family){
 						var req = dns.Request({
 						  question: question,
-						  server: { address: Server, port: 53, type: 'udp' },
+						  server: { address: Server?Server:"9.9.9.9", port: 53, type: 'udp' },
 						  timeout: 1000,
-						  rd: Data.RD,
+						  rd: Server?Data.RD:true,
 						});
 
 						req.on('timeout', function () {
