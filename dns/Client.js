@@ -55,7 +55,7 @@ function DNSTraversal(QueryData)
 		List[IDString] = {
 			Server:Server, Scope:Scope, Hostname:Hostname, Type:Type, RD
 		};
-		SendRequest(IDString, Server, Scope, Hostname, Type, RD);
+		SendRequest(IDString, Server, Scope, Hostname, Type, RD, RenderRequest);
 	}
 	else
 	{
@@ -65,7 +65,7 @@ function DNSTraversal(QueryData)
 	}
 	return $('<DIV>').addClass(IDString).text("Loading...");
 }
-function SendRequest(IDString, Server, Scope, Hostname, Type, RD)
+function SendRequest(IDString, Server, Scope, Hostname, Type, RD, Callback)
 {
 	$.ajax({
 		url: "/dns/LOOKUP/" + Server + "/" + Hostname,
@@ -83,7 +83,7 @@ function SendRequest(IDString, Server, Scope, Hostname, Type, RD)
 		{
 			console.log(IDString, data);
 			List[IDString].Results = data;
-			RenderRequest(IDString);
+			Callback(IDString);
 		}
 	}).error(function(err) {
 		console.log(err);
