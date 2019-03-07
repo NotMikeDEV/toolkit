@@ -30,6 +30,7 @@ function LookupFromURL() {
 		var QueryData = JSON.parse(DATA.substr(2));
 		$('#R').prop("checked", QueryData.RD?true:false);
 		$('#s').val(QueryData.Server=='a.root-servers.net'?'':QueryData.Server);
+		$('#q').val(QueryData.QNAME);
 		$('#types').val(QueryData.Type);
 		StartLookup(QueryData);
 	} catch(E) {console.error(DATA.substr(2),E);}
