@@ -16,7 +16,8 @@ module.exports = {
 			if (IPAddress.substr(0,7) == '::ffff:')
 				IPAddress = IPAddress.substr(7);
 			return execBG('dig -x ' + IPAddress + ' +short|head -n 1', function(err, stdout){
-				var Reply = "<p><b>IP Address: "+ IPAddress + "</b>\n";
+				var Reply = "<p><b>Closest Server: " + fs.readFileSync("/etc/hostname") + "</b></br>";
+				Reply += "<b>IP Address: "+ IPAddress + "</b>\n";
 				if (stdout && stdout != IPAddress)
 					Reply += "<br><b>Hostname:</b> " + stdout + "\n";
 				if (IPAddress.includes(":"))
