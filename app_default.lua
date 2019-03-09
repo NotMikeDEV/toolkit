@@ -2,6 +2,8 @@
 require("module/network")
 require("module/caddy")
 require("module/php")
+local NIC = network:AddInterface{type='ethernet', name='net0', default_route=true}
+NIC:AddIP{ipv4='44.131.14.50', ipv6='2a07:1c44:260e::50', nat=true}
 
 function AddProxies(Website)
 	Website:AddProxy{source='/dns/', target="http://127.0.0.1:8080"}
