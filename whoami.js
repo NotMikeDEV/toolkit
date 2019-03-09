@@ -20,9 +20,9 @@ module.exports = {
 				if (stdout && stdout != IPAddress)
 					Reply += "<br><b>Hostname:</b> " + stdout + "\n";
 				if (IPAddress.includes(":"))
-					Reply += '<br><a href="https://ipv6.tools.as206671.uk/speed/">[ IPv6 Speed Test ]</a></p>';
+					Reply += '<br><a href="http://ipv6.speed.as206671.uk/speed/">[ IPv6 Speed Test ]</a></p>';
 				else
-					Reply += '<br><a href="https://ipv4.tools.as206671.uk/speed/">[ IPv4 Speed Test ]</a></p>';
+					Reply += '<br><a href="http://ipv4.speed.as206671.uk/speed/">[ IPv4 Speed Test ]</a></p>';
 				console.log(Reply);
 				SendReply(200, 'text/html', Reply);
 			});
