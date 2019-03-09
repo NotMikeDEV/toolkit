@@ -3,7 +3,7 @@ fs = require('fs');
 var Bird = require("./bird");
 function Prefix(Prefix) {
 	Bird.AddPrefix(Prefix);
-	//execBG("ip -6 addr add " + Prefix + " dev lo");
+	execBG("ip -6 addr add " + Prefix + " dev lo");
 }
 Prefix("2a07:1c44:2640::/48");
 Prefix("2a07:1c44:2641::/48");
@@ -197,7 +197,7 @@ Prefix("2a07:1c44:26fc::/48");
 Prefix("2a07:1c44:26fd::/48");
 Prefix("2a07:1c44:26fe::/48");
 Prefix("2a07:1c44:26ff::/48");
-execBG("ip -6 route add 2a07:1c44:2600::/40 dev lo");
+//execBG("ip -6 route add 2a07:1c44:2600::/44 dev lo");
 module.exports = {
 	HTTP: function(req, res, startTime, URL, Path, bodyFilename, bodyLength, SendReply) {
 		if (Path.length == 2)
