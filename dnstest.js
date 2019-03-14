@@ -14,28 +14,7 @@ var DNSHandler = function(request, response) {
 	if (IPAddress.substr(0,7) == '::ffff:')
 		IPAddress = IPAddress.substr(7);
 	var Host = hostname.split(".");
-	if (Host.length == 3 && Host[0]=='tools' && Host[1]=='as206671' && Host[2]=='uk')
-	{
-		if (question.type == 1 || question.type == 255)
-			response.answer.push(dns.A({
-				name: request.question[0].name,
-				address: '80.211.145.237',
-				ttl: 300,
-			}));
-		if (question.type == 28 || question.type == 255)
-			response.answer.push(dns.AAAA({
-				name: request.question[0].name,
-				address: '2a00:6d40:72:40ed::1',
-				ttl: 300,
-			}));
-		if (question.type == 2 || question.type == 255)
-			response.answer.push(dns.NS({
-				name: "tools.as206671.uk",
-				data: 'tools.as206671.uk',
-				ttl: 300,
-			}));
-	}
-	else if (Host.length == 5 && Host[2]=='tools' && Host[3]=='as206671' && Host[4]=='uk')
+	if (Host.length == 5 && Host[2]=='tools' && Host[3]=='as206671' && Host[4]=='uk')
 	{
 		if (IPAddress.indexOf(':')>-1)
 		{
@@ -55,12 +34,12 @@ var DNSHandler = function(request, response) {
 		}
 		response.additional.push(dns.A({
 			name: "ipv4.tools.as206671.uk",
-			address: '80.211.145.237',
+			address: '51.75.162.83',
 			ttl: 300,
 		}));
 		response.additional.push(dns.AAAA({
 			name: "ipv6.tools.as206671.uk",
-			address: '2a00:6d40:72:40ed::1',
+			address: '2001:41d0:801:2000:0:0:0:1ed4',
 			ttl: 300,
 		}));
 		if (Clients[Host[0]] && !Clients[Host[0]].IPs[IPAddress])
@@ -132,23 +111,7 @@ var DNSHandler = function(request, response) {
 				}
 			}
 		}
-		else if (Host[0]=='ipv4' && (question.type == 1 || question.type == 255))
-		{
-			response.answer.push(dns.A({
-				name: request.question[0].name,
-				address: '80.211.145.237',
-				ttl: 300,
-			}));
-		}
-		else if (Host[0]=='ipv6' && (question.type == 28 || question.type == 255))
-		{
-			response.answer.push(dns.AAAA({
-				name: request.question[0].name,
-				address: '2a00:6d40:72:40ed::1',
-				ttl: 300,
-			}));
-		}
-		else if (Host[0] != 'ipv4' && Host[0] != 'ipv6')
+		else
 		{
 			response.answer.push(dns.SOA({
 				name: "tools.as206671.uk",
@@ -163,7 +126,12 @@ var DNSHandler = function(request, response) {
 			}));
 			response.authority.push(dns.NS({
 				name: "tools.as206671.uk",
-				data: 'tools.as206671.uk',
+				data: 'ipv4.tools.as206671.uk',
+				ttl: 300,
+			}));
+			response.authority.push(dns.NS({
+				name: "tools.as206671.uk",
+				data: 'ipv6.tools.as206671.uk',
 				ttl: 300,
 			}));
 		}
