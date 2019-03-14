@@ -23,8 +23,8 @@ local ToolkitAS206671 = caddy:AddWebsite{hostname='ipv4.tools.as206671.uk', port
 AddProxies(ToolkitAS206671)
 local ToolkitAS206671 = caddy:AddWebsite{hostname='ipv6.tools.as206671.uk', port=443, root='/tools'}
 AddProxies(ToolkitAS206671)
-local ToolkitM6XCV = caddy:AddWebsite{hostname='toolkit.m6xcv.uk', port=443, root='/tools/'}
-AddProxies(ToolkitAS206671)
+local Whois = caddy:AddWebsite{hostname='whois.as206671.uk', port=443, root='/tools/'}
+Whois:AddRewrite{source='/.*', target='/whois.php'}
 
 network:AddNameserver('9.9.9.9')
 
@@ -52,7 +52,7 @@ function install_container()
 	install_package("ca-certificates")
 	exec_or_die("wget -O- https://deb.nodesource.com/setup_8.x | bash -")
 
-	install_package("mtr graphviz whois bird .*traceroute iputils-tracepath tshark dnsutils nodejs certbot lua5.2 lua-socket tshark")
+	install_package("mtr graphviz whois bird .*traceroute iputils-tracepath tshark dnsutils nodejs certbot lua5.2 lua-socket tshark whois")
 	exec_or_die("npm i --save node-dig-dns")
 	exec_or_die("npm i --save native-dns")
 	exec_or_die("npm i --save ws")
