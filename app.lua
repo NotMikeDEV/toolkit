@@ -52,10 +52,11 @@ function install_container()
 	install_package("ca-certificates")
 	exec_or_die("wget -O- https://deb.nodesource.com/setup_8.x | bash -")
 
-	install_package("mtr graphviz whois bird .*traceroute iputils-tracepath tshark dnsutils nodejs certbot lua5.2 lua-socket tshark whois")
+	install_package("mtr graphviz whois bird .*traceroute iputils-tracepath tshark dnsutils nodejs certbot lua5.2 lua-socket tshark")
 	exec_or_die("npm i --save node-dig-dns")
 	exec_or_die("npm i --save native-dns")
 	exec_or_die("npm i --save ws")
+	exec_or_die("npm i --save whois")
 	exec_or_die("cd /root;wget -N https://peervpn.net/files/peervpn-0-044-linux-x86.tar.gz")
 	exec_or_die("cd /root;tar -zxf peervpn-0-044-linux-x86.tar.gz")
 	return 0
