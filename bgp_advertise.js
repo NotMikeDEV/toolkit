@@ -3,7 +3,7 @@ fs = require('fs');
 var Bird = require("./bird");
 function Prefix(Prefix) {
 	Bird.AddPrefix(Prefix);
-	execBG("ip -6 addr add " + Prefix + " dev lo");
+	execBG("ip -6 route add unreachable " + Prefix + " dev lo");
 }
 Prefix("2a07:1c44:2640::/48");
 Prefix("2a07:1c44:2641::/48");
