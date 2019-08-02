@@ -34,6 +34,6 @@ end
 Mount{path='/tools/', type="map", source="/cloud/toolkit"}
 function init_network_host(pid)
 	exec([[ip route add $(ip route list|grep 44.131.14.81|head -n 1|cut -d " " -f 1,2,3) table 20]])
-	exec([[ip -6 route add $(ip -6 route list|grep "2a07:1c44:260e::81"|head -n 1|cut -d " " -f 1,2,3) table 20]])
+	exec([[ip -6 route add $(ip -6 route list|grep "2a06:8187:fe19::81"|head -n 1|cut -d " " -f 1,2,3) table 20]])
 	return 0
 end
