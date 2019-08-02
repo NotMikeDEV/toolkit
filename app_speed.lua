@@ -2,7 +2,7 @@
 require("module/network")
 require("module/caddy")
 local NIC = network:AddInterface{type='ethernet', name='net0', default_route=true}
-NIC:AddIP{ipv4='44.131.14.81', ipv6='2a07:1c44:260e::81', nat=true}
+NIC:AddIP{ipv4='44.131.14.81', ipv6='2a06:8187:fe19::81', nat=true}
 
 function AddProxies(Website)
 	Website:AddProxy{source='/whoami/', target="http://127.0.0.1:8080"}
