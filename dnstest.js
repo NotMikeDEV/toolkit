@@ -1,7 +1,7 @@
 #!/usr/bin/nodejs
 fs = require('fs');
 
-var dig = require('node-dig-dns')
+var dns = require('native-dns');
 
 var DNSHandler = function(request, response) {
 	var question = request.question[0];
@@ -14,6 +14,56 @@ var DNSHandler = function(request, response) {
 	if (IPAddress.substr(0,7) == '::ffff:')
 		IPAddress = IPAddress.substr(7);
 	var Host = hostname.split(".");
+	if (Host.length >3 && Host[Host.length-3]=='tor' && Host[Host.length-2]=='as206671' && Host[Host.length-1]=='uk')
+	{
+		if (question.type == 28)
+		{
+			var Service = Host[Host.length-4];
+			response.additional.push(dns.TXT({
+				name: request.question[0].name,
+				data: ["Query for " + Service + " at " + new Date()],
+				ttl: 0,
+			}));
+			console.log("TOR lookup for " + Service);
+			require('dns').lookup("[::1]:9053", function(err, Server, family){
+				var req = dns.Request({
+					question: dns.Question({name: Service + ".onion", type: "AAAA"}),
+					server: { address: "::1", port: 9053, type: 'udp' },
+					timeout: 1000,
+					rd: true,
+				});
+				req.on('timeout', function () {
+					response.additional.push(dns.TXT({
+						name: request.question[0].name,
+						data: ["Query TIMEOUT at " + new Date()],
+						ttl: 0,
+					}));
+					response.send();
+				});
+
+				req.on('message', function (err, answer) {
+					for (var x in answer.answer)
+					{
+						response.answer.push(dns.AAAA({
+							name: request.question[0].name,
+							address: answer.answer[x].address,
+							ttl: 5,
+						}));
+					}
+				});
+
+				req.on('end', function () {
+					response.send();
+				});
+				req.send();
+			});
+		}
+		else
+		{
+			response.send();
+		}
+		return;
+	}
 	if (Host.length == 5 && Host[2]=='tools' && Host[3]=='as206671' && Host[4]=='uk')
 	{
 		if (IPAddress.indexOf(':')>-1)
@@ -47,6 +97,7 @@ var DNSHandler = function(request, response) {
 			Clients[Host[0]].IPs[IPAddress] = true;
 			require("dns").reverse(IPAddress, function(err, Hostnames){
 				Clients[Host[0]].ws.send(JSON.stringify({IP:IPAddress, Hostnames:Hostnames}));
+				console.log({IP:IPAddress, Hostnames:Hostnames});
 			});
 		}
 	}
@@ -157,7 +208,6 @@ var DNSHandler = function(request, response) {
 	}
 	response.send();
 };
-var dns = require('native-dns');
 var server = dns.createServer({dgram_type: 'udp6'});
 server.on('request', DNSHandler).serve(53);
 server = dns.createTCPServer({dgram_type: 'tcp6'});
@@ -175,6 +225,7 @@ module.exports = {
 		var MyID="t"+Math.random().toString().substr(2);
 		Clients[MyID] = {ws:ws, IPs:{}};
 		ws.send(JSON.stringify({Resolve:MyID+".dnstest.tools.as206671.uk"}));
+		console.log({Resolve:MyID+".dnstest.tools.as206671.uk"});
 		ws.onclose = function(){
 			console.log("WebSocket Close", MyID);
 			delete Clients[MyID];

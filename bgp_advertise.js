@@ -5,7 +5,15 @@ function Prefix(Prefix) {
 	Bird.AddPrefix(Prefix);
 	execBG("ip -6 route add unreachable " + Prefix + " dev lo");
 }
-Prefix("2a07:1c44:2640::/48");
+Bird.AddPrefix("2a07:1c44:2640::/48");
+var P = Bird.ListPrefixes(6);
+P["2a07:1c44:2640::/48"].Status = "TOR";
+var Peers = Bird.ListPeers(6);
+for (var x in Peers)
+{
+	Bird.UpdateAdvertisment("2a07:1c44:2640::/48", x, {Enabled: true});
+}
+
 Prefix("2a07:1c44:2641::/48");
 Prefix("2a07:1c44:2642::/48");
 Prefix("2a07:1c44:2643::/48");
