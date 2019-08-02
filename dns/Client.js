@@ -140,7 +140,14 @@ function RenderRequest(IDString)
 			$('<TD>').appendTo(Row).text(data.answer[x].ttl);
 			$('<TD>').appendTo(Row).text(data.answer[x].class);
 			$('<TD>').appendTo(Row).text(data.answer[x].type);
-			$('<TD>').appendTo(Row).text(data.answer[x].address||data.answer[x].data);
+			if (data.answer[x].type == "MX")
+				$('<TD>').appendTo(Row).text(data.answer[x].priority + " " + data.answer[x].exchange);
+			else if (data.answer[x].type == "SOA")
+				$('<TD>').appendTo(Row).text(data.answer[x].primary + " " + data.answer[x].admin + " " + data.answer[x].serial + " " + data.answer[x].refresh + " " + data.answer[x].retry + " " + data.answer[x].expiration + " " + data.answer[x].minimum);
+			else if (data.answer[x].type == "A" || data.answer[x].type == "AAAA")
+				$('<TD>').appendTo(Row).text(data.answer[x].address);
+			else
+				$('<TD>').appendTo(Row).text(data.answer[x].data);
 			var Name = data.answer[x].name;
 			if (!Scope || Name.substr(Name.length-Scope.length) == Scope)
 				Row.css("color", "#050");
