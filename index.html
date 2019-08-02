@@ -18,8 +18,8 @@ $.ajax({
 }).done(function(data) {
 	$("#ipv6").html(data);
 });
-if(location.protocol == 'http:')
-	location.href="https://"+location.hostname;
+//if(location.protocol == 'http:')
+//	location.href="https://"+location.hostname;
 
 var DNSInfo = new WebSocket("wss://tools.as206671.uk/dnstest/", "dnstest");
 DNSInfo.onclose = function() {
