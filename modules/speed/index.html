@@ -1,0 +1,95 @@
+<div id="SpeedTest">
+Javascript is required!
+</div>
+<script>
+function DownloadTest() {
+	let DataTotal = 0;
+    let DataCounted = 0;
+    var Request
+    var Timer
+    const StartTime = new Date()
+	$.ajax({
+		xhr: function() {
+			Request = new window.XMLHttpRequest();
+//			xhr.upload.addEventListener("progress", function(evt){
+//				DataTotal += evt.loaded;
+//			});
+			Request.addEventListener("progress", function(evt){
+				DataTotal = evt.loaded;
+			});
+
+			return Request;
+		},
+		type: 'GET',
+		url: "/speed/.down",
+		cache: false,
+		complete: function(data){
+            const ElapsedTime = (new Date() - StartTime)/1000
+            var DataRate = DataTotal/ElapsedTime
+            $('#DownloadResults').empty().append($('<B>').text("Download Speed: " + Math.floor((DataRate/(1024*1024/8))*10)/10 + "Mbit"))
+            clearInterval(Timer)
+            UploadTest(1024*1024)
+		}
+	});
+	Timer = setInterval(()=>{
+		var SinceLast = DataTotal - DataCounted;
+		DataCounted = DataTotal;
+        $('#DownloadSpeed').text(Math.floor(((SinceLast/(1024*1024))*8)*10)/10 + "Mbit")
+	}, 1000);
+};
+
+function UploadTest(Size) {
+	let DataTotal = 0;
+    let DataCounted = 0;
+    var Request
+    var Timer
+    const StartTime = new Date()
+    var Buff = ""
+    while (Buff.length < Size)
+        Buff += Math.random().toString(36).substr(2)
+	$.ajax({
+		xhr: function() {
+			Request = new window.XMLHttpRequest();
+			Request.upload.addEventListener("progress", function(evt){
+				DataTotal = evt.loaded;
+			});
+			return Request;
+		},
+		type: 'PUT',
+        data: Buff,
+		url: "/speed/.up",
+		cache: false,
+		complete: function(data){
+            const ElapsedTime = (new Date() - StartTime)/1000
+            var DataRate = Size/ElapsedTime
+            clearInterval(Timer)
+            if (ElapsedTime < 1)
+                UploadTest(Size*10)
+            else if (ElapsedTime < 3)
+                UploadTest(Size*5)
+            else if (ElapsedTime < 5)
+                UploadTest(Size*3)
+            else if (ElapsedTime < 7)
+                UploadTest(Size*2)
+            else
+                $('#UploadResults').empty().append($('<B>').text("Upload Speed: " + Math.floor((DataRate/(1024*1024/8))*10)/10 + "Mbit"))
+		}
+	});
+	Timer = setInterval(()=>{
+		var SinceLast = DataTotal - DataCounted;
+		DataCounted = DataTotal;
+        $('#UploadSpeed').text(Math.floor(((SinceLast/(1024*1024))*8)*10)/10 + "Mbit")
+	}, 1000);
+};
+
+$('#SpeedTest').empty();
+$('<DIV>').appendTo($('#SpeedTest')).prop('id', 'DownloadResults').text("Download Speed: ")
+$('<SPAN>').appendTo($('#DownloadResults')).prop('id', 'DownloadSpeed').text("")
+$('<DIV>').appendTo($('#SpeedTest')).prop('id', 'UploadResults').text("Upload Speed: ")
+$('<SPAN>').appendTo($('#UploadResults')).prop('id', 'UploadSpeed').text("")
+
+$(()=>{
+    DownloadTest()
+})
+
+</script>

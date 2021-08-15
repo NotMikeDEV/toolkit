@@ -1,0 +1,72 @@
+ <script>
+$.ajax({
+	url: "https://ipv4.tools.as206671.uk/.ip",
+	cache: false,
+}).done(function(IP) {
+	$("<SPAN>").appendTo(
+			$("<DIV>").appendTo($('#ipv4').empty()).text('Your IPv4 address is: ')
+		).text(IP).addClass('has-text-danger has-text-weight-semibold');
+	$.ajax({
+		url: "/.rdns?ip=" + IP,
+	}).done(function(Hostname) {
+		$("<SPAN>").appendTo($("<DIV>").appendTo($('#ipv4')).text('IPv4 Hostname: '))
+		.text(Hostname).addClass('has-text-primary has-text-weight-semibold');
+	});
+});
+
+ $.ajax({
+	url: "https://ipv6.tools.as206671.uk/.ip",
+	cache: false,
+}).done(function(IP) {
+	$("<SPAN>").appendTo(
+			$("<DIV>").appendTo($('#ipv6').empty()).text('Your IPv6 address is: ')
+		).text(IP).addClass('has-text-danger has-text-weight-semibold');
+	$.ajax({
+		url: "/.rdns?ip=" + IP,
+	}).done(function(Hostname) {
+		$("<SPAN>").appendTo($("<DIV>").appendTo($('#ipv6')).text('IPv6 Hostname: '))
+			.text(Hostname).addClass('has-text-primary has-text-weight-semibold');
+	});
+});
+if(location.protocol == 'http:')
+	location.href="https://"+location.hostname;
+
+var DNSTest = io('/.dns', {transports: ['websocket']});
+DNSTest.on('connect', ()=>{
+	console.log("DNS Test Connect");
+	$('<DIV>').appendTo($("#dns"))
+		.text("DNS Servers:").addClass("has-text-weight-semibold");
+	DNSTest.on('probeaddress', (message)=>{
+		console.log("Probe Address", message);
+		$.ajax({
+			url: "https://" + message,
+			cache: false,
+		})
+	});
+	var DoneIPs={};
+	DNSTest.on('DNS IP', (IP)=>{
+		if (DoneIPs[IP] !== undefined)
+			return;
+		console.log("DNS Server Address", IP);
+		DoneIPs[IP] = $('<DIV>').appendTo($("#dns"))
+			.text(IP).addClass('has-text-danger');
+		$.ajax({
+			url: "/.rdns?ip=" + IP,
+		}).done(function(Hostname) {
+			$("<DIV>").css('display', 'inline-block').appendTo(DoneIPs[IP])
+				.text(Hostname).addClass('has-text-primary').css("padding-left", 5);
+		});
+	});
+	DNSTest.on('disconnect', (reason)=>{
+		console.log("DNS Test Disconnect");
+		DNSTest.close();
+	});
+})
+</script>
+<div id="ipv6">
+	Your IPv6 address is Unknown
+</div>
+<div id="ipv4">
+	Your IPv4 address is Unknown
+</div>
+<div id="dns"></div>

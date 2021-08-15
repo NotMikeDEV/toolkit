@@ -1,0 +1,40 @@
+version: '2.1'
+services:
+  nodejs:
+    image: docker.storemy.work/tools
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm start
+    restart: always
+    volumes:
+    - tools-data:/data
+    ports:
+    - 80
+    - 443
+    - 53
+    - 53/udp
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+  dns:
+    container_name: bind
+    image: cytopia/bind
+    restart: unless-stopped
+    environment:
+      - ALLOW_RECURSION=172.20.4.0/24
+      - DNS_FORWARDER=8.8.8.8,1.1.1.1,9.9.9.9
+    networks:
+      tools:
+        ipv4_address: 172.20.4.53
+        ipv6_address: fc20::53
+networks:
+  tools:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 172.20.4.0/24
+       - subnet: fc20::/64
+volumes:
+  tools-data:

@@ -1,0 +1,137 @@
+<title>AS206671 Connectivity</title>
+<form style="max-width: 500px;" class="box" id="conntest">
+	<div class="field is-horizontal">
+		<div class="field-label">
+			<label class="label">Host</label>
+		</div>
+		<div class="field-body">
+			<div class="field control">
+				<input class="input" id="hostname" name="hostname" placeholder="IP/hostname (google.com)" />
+			</div>
+		</div>
+	</div>
+	<div class="field is-horizontal">
+		<div class="field-body">
+			<div class="field">
+				<input class="button" id="ping" type="submit" name="command" value="Ping" style="width:100%" />
+			</div>
+			<div class="field">
+				<input class="button" id="trace" type="submit" name="command" value="Traceroute" style="width:100%" />
+			</div>
+		</div>
+	</div>
+</form>
+<script>
+window.OpenDialog = () => {
+    var Dialog = $('<DIV>').addClass('modal');
+    var Content = $('<DIV>');
+    Content.Close = ()=>{};
+    window.CloseDialog = (Popping) => {
+        Content.trigger('close');
+        if (Popping !== true)
+            window.history.pushState({},'', '?');
+        Dialog.remove();
+        delete window.CloseDialog;
+    };
+	$('<DIV>').addClass('modal-background').appendTo(Dialog).on('click', window.CloseDialog);
+	var ContentHolder = $('<DIV>').addClass('modal-content').appendTo(Dialog);
+	Content.addClass('box').appendTo(ContentHolder);
+	$('<BUTTON>').addClass('modal-close is-large').appendTo(Dialog).on('click', window.CloseDialog);
+    Dialog.appendTo($('body')).addClass("is-active");
+    return Content;
+}
+window.Server = {
+    Resolve: async (Hostname) =>{
+        let Return;
+        const Result = new Promise((r)=>Return=r);
+        ServerConnection.emit('Resolve', Hostname, (IPs)=>{
+            Return(IPs);
+        });
+        return await Result;
+    },
+    Ping: async (Host) =>{
+        let Return;
+        const Result = new Promise((r)=>Return=r);
+        ServerConnection.emit('Ping', Host, (R)=>{
+            Return(R);
+        });
+        return await Result;
+    },
+    Trace: async (Host) =>{
+        let Return;
+        const Result = new Promise((r)=>Return=r);
+        ServerConnection.emit('Trace', Host, (R)=>{
+            Return(R);
+        });
+        return await Result;
+    },
+};
+window.DoPing = async (Target) =>{
+    $('#hostname').val(Target);
+    const Dialog = window.OpenDialog();
+    const Output = $('<PRE>').appendTo(Dialog.empty());
+    const Hostname = Target;
+    Output.text("Ping " + Hostname);
+    const IPs = await window.Server.Resolve(Hostname);
+    console.log("Resolved", Hostname, IPs);
+    if (IPs.length < 1)
+        return Output.text("Unable to resolve hostname " + Hostname);
+    const IP = IPs[0];
+    Output.text("Ping " + Hostname + " (" + IP + "):\n");
+    let ContinuePing = true;
+    Dialog.on('close', ()=>{
+        ContinuePing=false;
+    });
+    while (ContinuePing) {
+        if (!window.PingCount)
+            await new Promise(r=>setTimeout(r,1000));
+        console.log("Ping", IP);
+        const Result = await window.Server.Ping(IP);
+        console.log("PONG", Result);
+        if (Result.alive) {
+            Output.append("Reply from " + IP + " in " + Result.time + "ms\n");
+        } else {
+            Output.append("Timeout waiting for reply from " + IP + "\n");
+        }
+        Dialog.parent().scrollTop(Output.height());
+        if (window.PingCount)
+            ContinuePing = --window.PingCount;
+    }
+}
+
+window.DoTrace = async (Target) =>{
+    $('#hostname').val(Target);
+    const Dialog = window.OpenDialog();
+    const Output = $('<PRE>').appendTo(Dialog.empty());
+    const Hostname = Target;
+    Output.text("Trace " + Hostname);
+    const IPs = await window.Server.Resolve(Hostname);
+    console.log("Resolved", Hostname, IPs);
+    if (IPs.length < 1)
+        return Output.text("Unable to resolve hostname " + Hostname);
+    const IP = IPs[0];
+    Output.text("Trace " + Hostname + " (" + IP + "):\n");
+    let ID = await window.Server.Trace(IP);
+    console.log("Trace", ID)
+    var Recvd = ""
+    ServerConnection.on('trace-' + ID, (data)=>{
+        console.log(data)
+        Recvd += data
+        Output.text(Recvd)
+    })
+}
+
+const ServerConnection = io('/connectivity/');
+$('#ping').click((event)=>{
+    console.log("ping", event);
+    if (!$('#hostname').val()) $('#hostname').val('google.com');
+    window.DoPing($('#hostname').val());
+    return false;
+});
+$('#trace').click((event)=>{
+    console.log("trace", event);
+    if (!$('#hostname').val()) $('#hostname').val('google.com');
+    window.DoTrace($('#hostname').val());
+    return false;
+});
+</script>

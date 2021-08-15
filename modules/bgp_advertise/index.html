@@ -1,0 +1,72 @@
+<SCRIPT>
+var State = {};
+function CreatePeerDIV(Server, ID, Name) {
+    State[ID] = {Enabled: false};
+    const DIV = $('<DIV>').appendTo($('#bgp')).addClass("box");
+    const Title = $('<SPAN>').appendTo(DIV).text(Name + " ").addClass("has-text-weight-bold");
+    const Communities = $('<PRE>').appendTo(DIV).css("display", "inline-block").css("padding", "0");
+    const CommunitiesText = $('<SPAN>').appendTo(Communities);
+    const AddCommunity = $('<BUTTON>').appendTo(Communities).text("+");
+    const EnableDisable = $('<DIV>').appendTo(DIV).css("float", "right").addClass("button");
+    async function RefreshDIV () {
+        if (State[ID].Enabled) {
+            EnableDisable.text("Enabled").addClass("has-text-weight-bold has-background-success").removeClass("has-background-danger");
+        } else {
+            EnableDisable.text("Disabled").addClass("has-text-weight-bold has-background-danger").removeClass("has-background-success");
+        }
+        CommunitiesText.empty();
+        let Count = 0;
+        for (let x in Response.Communities)
+        {
+            Count++;
+            $('<PRE>').appendTo(CommunitiesText).css("display", "inline-block").css("padding", "0").css("padding-left", "3").css("padding-right", "3").text(x).css("border", "1px solid #000099");
+            $('<DIV>').appendTo(CommunitiesText).css("display", "inline-block").width("5").html("&nbsp;");
+        }
+        if (Count == 0)
+            CommunitiesText.text("No Communities");
+    }RefreshDIV();
+    EnableDisable.click(()=>{
+        State[ID].Enabled = !State[ID].Enabled;
+        Server.send({type: "enable", Peer: ID, Enabled: State[ID].Enabled}, RefreshDIV);
+    });
+    AddCommunity.click(()=>{
+        const Dialog = $('<DIV>').appendTo('body').addClass("modal is-active");
+            $('<DIV>').appendTo(Dialog).addClass("modal-background");
+            const DialogCard = $('<DIV>').appendTo(Dialog).addClass("modal-card");
+            const DialogCardHead = $('<HEADER>').appendTo(DialogCard).addClass("modal-card-head");
+                $('<P>').appendTo(DialogCardHead).addClass("modal-card-head-title").text("Add Community");
+            const DialogCardBody = $('<DIV>').appendTo(DialogCard).addClass("modal-card-body");
+                const ErrorText = $('<DIV>').appendTo(DialogCardBody).addClass("has-text-danger");
+                $('<SPAN>').appendTo(DialogCardBody).text("Community String ");
+                const CommunityInput = $('<INPUT>').appendTo(DialogCardBody).addClass("input").prop("placeholder", "XXX:XXX").width(80).focus();
+                const AddButton = $('<BUTTON>').appendTo(DialogCardBody).addClass("button").text("Add");
+                AddButton.click(()=>{
+                    Server.send({type: "addcommunity", Peer: ID, Community: CommunityInput.val()}, (Response)=>{
+                        if (Response.OK) {
+                            RefreshDIV();
+                            Dialog.remove();
+                        } else
+                            ErrorText.text(Response.Error);
+                    });
+                });
+                const CancelButton = $('<BUTTON>').appendTo(DialogCardBody).addClass("button").text("Cancel");
+                CancelButton.click(()=>{Dialog.remove();});
+    });
+}
+var Server = io('/.bgp/', {transports: ['websocket']});
+Server.on('connect', ()=>{
+	console.log("Server Connect");
+	$('#bgp').empty();
+    $('<DIV>').appendTo('#bgp').text("Connected").addClass("has-text-weight-semibold");
+
+    Server.send({type: "init"}, (Response)=>{
+			console.log("Server Response", Request, Response);
+			$('<PRE>').appendTo($('#bgp').empty()).text("Your assigned prefix: " + Response.Prefix);
+            for (let ID in Response.Peers) {
+                var PeerDIV = CreatePeerDIV(Server, ID, Response.Peers[ID]);
+                
+            }
+		});
+});
+</SCRIPT>
+<DIV ID="bgp"></DIV>

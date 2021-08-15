@@ -1,0 +1,358 @@
+<title>AS206671 DNS Traversal</title>
+<form style="max-width: 500px;" class="box" id="dnslookup">
+	<div class="field is-horizontal">
+		<div class="field-label">
+			<label class="label">Name</label>
+		</div>
+		<div class="field-body">
+			<div class="field control">
+				<input class="input" name="hostname" placeholder="tools.as206671.uk" />
+			</div>
+			<div class="field select">
+				<select style="width:100%;" name="type">
+					<option value="A">A</option>
+					<option value="AAAA">AAAA</option>
+					<option value="NS">NS</option>
+					<option value="TXT">TXT</option>
+					<option value="CNAME">CNAME</option>
+					<option value="MX">MX</option>
+					<option value="SRV">SRV</option>
+					<option value="SOA">SOA</option>
+					<option value="PTR">PTR</option>
+					<option value="ANY">ANY</option>
+					<option value="DS">DS</option>
+				</select>
+			</div>
+		</div>
+	</div>
+	<div class="field is-horizontal">
+		<div class="field-label">
+			<label class="label">Server</label>
+		</div>
+		<div class="field-body">
+			<div class="field control">
+				<input class="input" name="server" placeholder="f.root-servers.net" />
+			</div>
+			<div class="field">
+				<input class="button" type="submit" value="Lookup" style="width:100%" />
+			</div>
+		</div>
+	</div>
+</form>
+<div id="results">
+</div>
+<script>
+function toHex(s) {
+    var h = ''
+    for (var i = 0; i < s.length; i++) {
+        h += s[i].toString(16)
+    }
+    return h
+}
+
+const RecordTypes = {
+	1: {Name: 'A', Format: (Record)=> [Record.address] },
+	2: {Name: 'NS', Format: (Record)=> [!Record.data?'':Record.data + "."]},
+	5: {Name: 'CNAME', Format: (Record)=> [!Record.data?'':Record.data + "."]},
+	6: {Name: 'SOA', Format: (Record)=> [!Record.primary?'':Record.primary + ".", Record.admin + ".", Record.serial, Record.refresh, Record.retry, Record.expire, Record.minimum]},
+	12: {Name: 'PTR', Format: (Record)=> [!Record.data?'':Record.data + "."]},
+	13: {Name: 'HINFO', Format: (Record)=> Record.data},
+	15: {Name: 'MX', Format: (Record)=> [Record.priority, !Record.exchange?'':Record.exchange + '.']},
+	16: {Name: 'TXT', Format: (Record)=> Record.data},
+	28: {Name: 'AAAA', Format: (Record)=> [Record.address]},
+	33: {Name: 'SRV', Format: (Record)=> [Record.priority, Record.weight, Record.port, !Record.target?'':Record.target + '.']},
+	37: {Name: 'CERT', Format: (Record)=> {
+		if (!Record.data) return [];
+		console.log(Data);
+		const Algorithm = Record.data.buffer[0];
+		const Cert = Array.prototype.map.call(new Uint8Array(Record.data.buffer), x => ('00' + x.toString(16)).slice(-2)).join('').substr(2).toUpperCase();
+		return [Algorithm, Cert];
+	}},
+	39: {Name: 'DNAME', Format: (Record)=> [!Record.data?'':Record.data + "."]},
+	41: {Name: 'OPT', Format: (Record)=> [JSON.stringify(Record.options)]},
+	43: {Name: 'DS', Format: (Record)=> {
+			if (!Record.data) return [];
+			const Data = new DataView(new ArrayBuffer(4));
+			for (x=0; x<4; x++)
+				Data.setUint8(x, Record.data.buffer[x]);
+			console.log(Data);
+			const Cert = Array.prototype.map.call(new Uint8Array(Record.data.buffer), x => ('00' + x.toString(16)).slice(-2)).join('').substr(8).toUpperCase();
+			const KeyTag = Data.getUint16(0);
+			const Algorithm = Data.getUint8(2);
+			const DigestType = Data.getUint8(3);
+			return [KeyTag, Algorithm, DigestType, Cert];
+		}},
+	252: {Name: 'AXFR', Format: (Record)=> []},
+	255: {Name: 'ANY', Format: (Record)=> []}
+};
+let ServerConnection = null;
+const DNSClient = window.Server = {
+	Execute: (Request)=>{
+		if (ServerConnection === null) {
+			ServerConnection = io('/dns/');
+			ServerConnection.Cache = {};
+		}
+		const RequestString = JSON.stringify(Request);
+		if (ServerConnection.Cache[RequestString]!==undefined)
+			return Promise.resolve(ServerConnection.Cache[RequestString]);
+
+		let Result = false;
+		ServerConnection.Cache[RequestString] = new Promise( (resolutionFunc) => {
+			Result = resolutionFunc;
+		});
+		console.log("ServerQuery", Request);
+		ServerConnection.send(Request, (Response)=>{
+			console.log("ServerQuery Response", Request, Response);
+			Result(Response);
+		});
+		return ServerConnection.Cache[RequestString];
+	},
+	LookupHost: (Hostname) => {
+		return window.Server.Execute({Command: "Resolve", Hostname});
+	},
+	SendQuery: (Name, Type, Server) => {
+		return window.Server.Execute({Command: "Query", Name, Type, Server});
+	},
+};
+
+window.HideResults = ()=>{
+	$('.DelegationResult').each((index, a)=>{
+		const Wrapper = $('<BUTTON>').addClass('button')
+			.text("Show Response");
+		const Results = $(a).removeClass('DelegationResult')
+			.replaceWith(Wrapper);
+		Wrapper.click(()=>{
+			Wrapper.replaceWith(Results);
+		});
+	});
+};window.HideResults();
+function ResultDIV(Name, Type, Server, Glue) {
+	const ServerIPDIV = (IP) => {
+		const ClassName = 'Server_' + IP.replace(/\:/g,'_').replace(/\./g,'_');
+		const DIV = $('<DIV>').addClass(ClassName);
+		DIV.text("Querying", IP);
+		let Reply = false;
+		DIV.Finished = new Promise( (resolutionFunc) => {
+			Reply = resolutionFunc;
+		});
+		DNSClient.SendQuery(Name, Type, IP).then((Result)=>{
+			DIV.text("Reply", IP, Result);
+			const FirstDIV = $('.' + ClassName).first();
+			if (DIV[0] != FirstDIV[0]) {
+				DIV.empty().parent().css('cursor','pointer').prop('href', '#' + ClassName);
+				return Reply(Result);
+			}
+			FirstDIV.empty().parent().prop('name', ClassName);
+			if (!Result) {
+				FirstDIV.text("No Response");
+				return Reply(Result);
+			}
+			const ResponseDIV = $('<PRE>').appendTo(FirstDIV).addClass('has-background-white').css('font-size', '0.8em');
+			var HeaderString = "opcode: " + Result.header.opcode
+					+ ", status: " + Result.header.rcode
+					+ ", id: " + Result.header.id + "\n";
+			HeaderString += "flags:";
+			if (Result.header.qr)
+				HeaderString += " qr";
+			if (Result.header.aa)
+				HeaderString += " aa";
+			if (Result.header.rd)
+				HeaderString += " rd";
+			if (Result.header.ra)
+				HeaderString += " ra";
+			if (Result.header.tc)
+				HeaderString += " tc";
+			
+			HeaderString += "; QUERY: " + Result.question.length;
+			HeaderString += ", ANSWER: " + Result.answer.length;
+			HeaderString += ", AUTHORITY: " + Result.authority.length;
+			HeaderString += ", ADDITIONAL: " + Result.additional.length;
+			
+			if (Result.edns) {
+				HeaderString += "\nEDNS: version: " + Result.edns.version;
+				HeaderString += ", flags: ";
+				if (Result.edns.do)
+					HeaderString += "do ";
+				HeaderString += ", udp: " + Result.edns.class;
+			}
+			ResponseDIV.text(HeaderString + "\n\n");
+			
+			var ResultTable = $('<TABLE>').appendTo(ResponseDIV);
+			const ResultRow = (Record) => {
+				const TR = $('<TR>');
+				$('<TD>').appendTo(TR).text(Record.name + ".");
+				$('<TD>').appendTo(TR).text(Record.ttl).css("padding-left", 10);
+				$('<TD>').appendTo(TR).text(Record.class == 1?'IN':Record.class).css("padding-left", 10);
+				var RecordSpec = RecordTypes[Record.type];
+				if (RecordSpec) {
+					$('<TD>').appendTo(TR).text(RecordSpec.Name).css("padding-left", 10);
+					const Fields = RecordSpec.Format(Record);
+					const DataCell = $('<TD>').appendTo(TR);
+					for (var x in Fields)
+						$('<SPAN>').appendTo(DataCell).text(Fields[x]).css("padding-left", 10).css("display", "inline-block").css("min-width", 30);
+				} else {
+					$('<TD>').appendTo(TR).text(Record.type).css("padding-left", 10);
+					$('<TD>').appendTo(TR).text(Record.data).css("padding-left", 10);
+				}
+				return TR;
+			}
+			if (Result.question.length)
+				$('<TD>').appendTo($('<TR>').appendTo(ResultTable)).prop('colspan', 10)
+					.text("QUESTION SECTION:");
+			for (var x in Result.question)
+				ResultRow(Result.question[x]).appendTo(ResultTable);
+
+			if (Result.answer.length)
+				$('<TD>').appendTo($('<TR>').appendTo(ResultTable)).prop('colspan', 10)
+					.text("ANSWER SECTION:");
+			for (var x in Result.answer)
+				ResultRow(Result.answer[x]).appendTo(ResultTable);
+
+			if (Result.authority.length)
+				$('<TD>').appendTo($('<TR>').appendTo(ResultTable)).prop('colspan', 10)
+					.text("AUTHORITY SECTION:");
+			for (var x in Result.authority)
+				ResultRow(Result.authority[x]).appendTo(ResultTable);
+
+			if (Result.additional.length)
+				$('<TD>').appendTo($('<TR>').appendTo(ResultTable)).prop('colspan', 10)
+					.text("ADDITIONAL SECTION:");
+			for (var x in Result.additional) if (Result.additional[x].type != 41 || x!=Result.additional.length-1 || Result.additional[x].name)
+				ResultRow(Result.additional[x]).appendTo(ResultTable);
+
+			let FooterString = "Query Time: " + Result.info.time + " msec\n"
+				+ "SERVER: " + Result.info.server + "\n"
+				+ "WHEN: " + Result.info.when + "\n"
+				+ "MSG SIZE rcvd: " + Result.info.size;
+			ResponseDIV.append("\n" + FooterString);
+
+			if (!Result.header.aa && Result.header.rcode == 'NOERROR' && Result.answer.length == 0) {
+				let SOA = false;
+				let NS = [];
+				for (var x in Result.authority) {
+					if (Result.authority[x].type == 6) {
+						SOA = true;
+					}
+					if (Result.authority[x].type == 2) {
+						NS.push(Result.authority[x].data);
+					}
+				}
+				if (!SOA && NS.length) {
+					ResponseDIV.addClass('DelegationResult');
+					window.HideResults();
+					const Pending = [];
+					for (var n in NS) {
+						let Glue = [];
+						for (var a in Result.additional)
+							if (Result.additional[a].name == NS[n] && (Result.additional[a].type == 1 || Result.additional[a].type == 28))
+								Glue.push(Result.additional[a].address);
+						console.log("Delegation", Server, NS[n], Glue);
+						
+						const Results = ResultDIV(Name, Type, NS[n], Glue);
+						Results.appendTo(FirstDIV);
+						Pending.push(Results.Finished);
+					}
+					return Reply(Promise.all(Pending));
+				}
+			}
+			return Reply(Result);
+		});
+		return DIV;
+	}
+	console.log("Query", Server);
+	const DIV = $('<DIV>').prop('id', 'Host' + Server).addClass('box');
+	const HostnameText = $('<SPAN>').text(Server).addClass('has-text-danger has-text-weight-semibold');
+	DIV.append(HostnameText);
+	const ServerIPs = {};
+	if (Glue) for (var x in Glue) {
+		ServerIPs[Glue[x]] = {glue: true};
+	}
+	let Result = false;
+	DIV.Finished = new Promise( (resolutionFunc) => {
+		Result = resolutionFunc;
+	});
+
+	const ResolvedIPs = DNSClient.LookupHost(Server);
+	ResolvedIPs.then(async(ResolvedIPs)=>{
+		if (ResolvedIPs.length == 1 && ResolvedIPs[0] == Server)
+			ServerIPs[Server] = {};
+		else for (var x in ResolvedIPs) {
+			if (ServerIPs[ResolvedIPs[x]] === undefined)
+				ServerIPs[ResolvedIPs[x]] = {resolved: true};
+			else
+				ServerIPs[ResolvedIPs[x]].resolved = true;
+		}
+		console.log("Resolved", Server, ServerIPs);
+		const SubQueries = [];
+		for (var IP in ServerIPs) {
+			HostnameText.hide();
+			console.log("Server", Server, "IP", IP);
+			const ServerDIV = $('<A>').appendTo(DIV).css('cursor', 'default');
+			const ServerHeading = $('<DIV>').appendTo(ServerDIV);
+			$('<SPAN>').appendTo(ServerHeading).text(Server).addClass('has-text-weight-semibold');
+			$('<SPAN>').appendTo(ServerHeading).text(" " + IP).addClass('has-text-danger has-text-weight-semibold');
+			if (ServerIPs[IP].glue)
+				$('<SPAN>').appendTo(ServerHeading).text(" [Glue]").addClass('has-text-success has-text-weight-semibold');
+			if (ServerIPs[IP].resolved)
+				$('<SPAN>').appendTo(ServerHeading).text(" [Valid]").addClass('has-text-success has-text-weight-semibold');
+			const ServerAddressDIV = ServerIPDIV(IP);
+			ServerAddressDIV.appendTo(ServerDIV);
+			SubQueries.push(ServerAddressDIV.Finished);
+		};
+		Result(Promise.all(SubQueries));
+	});
+	return DIV;
+};
+
+window.DoLookup = async(Name, Type, Server) => {
+	if (ServerConnection)
+		ServerConnection.close();
+	ServerConnection = null;
+	if (!Name)
+		Name = 'tools.as206671.uk';
+	if (!Type)
+		Type = 'A';
+	if (!Server)
+		Server = 'f.root-servers.net';
+	$('#dnslookup input[name^="hostname"]')[0].setAttribute('value', Name);
+	$('#dnslookup input[name^="hostname"]').val(Name);
+	$('#dnslookup select[name^="type"] option').each((x, Option)=>{
+		if (Option.value == Type)
+			Option.setAttribute('selected', '');
+		else
+			Option.removeAttribute('selected');
+	})
+	$('#dnslookup select[name^="type"]').val(Type);
+	$('#dnslookup input[name^="server"]')[0].setAttribute('value', Server);
+	$('#dnslookup input[name^="server"]').val(Server);
+	console.log("DNS lookup", Name, Type, Server);
+	
+	$('#results').empty();
+	const Results = ResultDIV(Name, Type, Server);
+	Results.appendTo($('#results'));
+	await Results.Finished;
+}
+window.onhashchange = function(event) {
+	return false;
+};
+window.onpopstate = function(event) {
+	if (!event.state)
+		return;
+	window.DoLookup(event.state.hostname, event.state.type, event.state.server);
+}
+$("#dnslookup").submit(()=>{
+	const Hostname = $('#dnslookup input[name^="hostname"]').val();
+	const Server = $('#dnslookup input[name^="server"]').val();
+	const Type = $('#dnslookup select[name^="type"]').val();
+	const urlPath = '?hostname=' + encodeURIComponent(Hostname)
+		+ "&server=" + encodeURIComponent(Server)
+		+ "&type=" + encodeURIComponent(Type);
+	window.history.pushState({
+		"hostname":Hostname,
+		"server":Server,
+		"type":Type,
+		},Hostname + " " + Type, urlPath);
+	window.DoLookup(Hostname, Type, Server);
+	return false;
+});
+</script>
