@@ -22,8 +22,8 @@ module.exports = async (Service)=>{
         req.on('end', ()=>{
             F.close()
             console.log("PCAP upload", Filename)
-            res.writeHead(200, {'Content-Type': 'text/json'});
-            res.end(JSON.stringify({filename: Filename, id: Filename}))
+            res.writeHead(200, {'Content-Type': 'text/javascript'});
+            res.end(JSON.stringify({filename: Filename, id: Filename, size: size}))
             setTimeout(()=>{
                 fs.rm("captures/" + Filename)
             }, 1000*60*60)
