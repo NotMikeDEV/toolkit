@@ -140,7 +140,12 @@ app.Zone = async function (Service) {
 	Service.DNS.register("dnstest." + Service.Hostname, { type: 2, class: 1,
 		name: "dnstest." + Service.Hostname,
 		ttl: 300,
-		data: Service.Hostname,
+		data: "ipv4." + Service.Hostname,
+	});
+	Service.DNS.register("dnstest." + Service.Hostname, { type: 2, class: 1,
+		name: "dnstest." + Service.Hostname,
+		ttl: 300,
+		data: "ipv6." + Service.Hostname,
 	});
     return;
 }
