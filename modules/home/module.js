@@ -4,7 +4,7 @@ module.exports = async (Service)=>{
 	Service.StaticPage('/', 'modules/home/index.html');
 
 	Service.ExpressRouter.get('/.ip', (req,res)=>{
-		var IPAddress = IPAddr.parse(req.ip);
+		var IPAddress = IPAddr.parse(req.headers['x-real-ip']);
 		if (IPAddress.kind() == 'ipv4')
 			IPAddress = IPAddress.toString({format: 'v4'});
 		else

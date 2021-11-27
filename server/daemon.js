@@ -1,8 +1,16 @@
 const promisify = require('promisify-node');
 const fs = promisify('fs');
-const exec = promisify('child_process').exec;
+const spawn = promisify('child_process').spawn;
 
-exec("nginx").then((err, stdout, stderr)=>{console.log("nginx", err, stdout, stderr)})
+env = {}
+env["CADDYPATH"]="/data/caddy"
+env["HOME"]="/data/caddy"
+env["PATH"]="/bin:/usr/bin"
+
+const caddy = spawn("caddy", ["start", "--config", "/etc/caddy/Caddyfile"], {env:env})
+caddy.stdout.on('data', (data)=>{console.log("caddy " + data)})
+caddy.stderr.on('data', (data)=>{console.log("caddy " + data)})
+caddy.on('close', (code)=>{console.log(`caddy process exited with code ${code}`)})
 
 var Service = {
 		Data: {},
@@ -30,27 +38,12 @@ async function Init() {
 	} catch {}
 
 	Service.HTTP = require('http').Server(Service.Express);
-	Service.HTTP.listen(80, () => console.log(`Listening at http://`));
+	Service.HTTP.listen(8000, () => console.log(`Listening at http://`));
 	
 	await Service.DNS.Zone(Service);
-	const ACME = require('./ACME.js');
-	await ACME(Service);
 	
-	Service.HTTPS = require('https').createServer({
-		   key: Service.Data.TLSKey,
-		   cert: Service.Data.TLSCert,
-		}, Service.Express);
-	Service.HTTPS.listen(443, () => console.log(`Listening at https://`));
-	Service.ExpressRouter.use(function (req, res, next) {
-		if (req.protocol == 'http' && req.header('Upgrade-Insecure-Requests')) {
-			res.set('Location', 'https://' + req.host + req.originalUrl);
-			return res.status(302);
-		}
-		next();
-	})
 	Service.IO = require('socket.io')();
 	Service.IO.attach(Service.HTTP);
-	Service.IO.attach(Service.HTTPS);
 
 	await fs.writeFile('/data/app.json', JSON.stringify(Service.Data));
     
