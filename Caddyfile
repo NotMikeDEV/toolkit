@@ -13,3 +13,13 @@ ipv6.tools.as206671.uk {
         header_up X-Real-IP {http.request.remote.host}
     }
 }
+networktools.uk {
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Real-IP {http.request.remote.host}
+    }
+}
+www.networktools.uk {
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Real-IP {http.request.remote.host}
+    }
+}

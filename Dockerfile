@@ -15,7 +15,6 @@ EXPOSE 80
 EXPOSE 443
 EXPOSE 53
 EXPOSE 53/UDP
-COPY nginx.conf /etc/nginx/nginx.conf
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY . .
 CMD [ "node", "start" ]
