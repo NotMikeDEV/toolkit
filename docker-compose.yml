@@ -1,7 +1,7 @@
 version: '2.1'
 services:
   nodejs:
-    image: docker.storemy.work/tools
+    image: ide.notmike.uk/tools
     build:
       context: .
       dockerfile: Dockerfile
