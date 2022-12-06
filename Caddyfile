@@ -23,3 +23,8 @@ www.networktools.uk {
         header_up X-Real-IP {http.request.remote.host}
     }
 }
+:8080 {
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Real-IP {http.request.remote.host}
+    }
+}
