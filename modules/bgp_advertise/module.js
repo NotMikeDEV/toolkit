@@ -1,11 +1,11 @@
 const Tunnels={
-    "GWlon": {"Type":"Internal", "Name": "London", "IPv6":"2a05:f480:1000:90f:5400:3ff:fe6d:a19", "ASN":"206671"},
-    "GWams": {"Type":"Internal", "Name": "Amsterdam", "IPv6":"2001:19f0:5001:2ecb:5400:3ff:fe6d:5a4", "ASN":"206671"},
-    "GWnj": {"Type":"Internal", "Name": "NewJersey", "IPv6":"2001:19f0:5:3562:5400:3ff:fe6e:1376", "ASN":"206671"},
-    "TBch": {"Type":"6in4", "Name": "Zurich", "IPv6":"2a09:4c0:1e0:120::1", "ASN":"58057", "Local_IPv4":"198.244.131.15", "Local_IPv6":"2a09:4c0:1e0:120::2/64", "Remote_IPv4":"94.177.122.249"},
-    "TBde": {"Type":"6in4", "Name": "Dusseldorf", "IPv6":"2a09:4c0:3e0:23::1", "ASN":"58057", "Local_IPv4":"198.244.131.14", "Local_IPv6":"2a09:4c0:3e0:23::2/64", "Remote_IPv4":"194.50.94.249"},
-    
-};
+    "GWlon": {"Type":"Internal", "Name": "London", "IPv6":"2001:19f0:7400:8516:5400:04ff:fe52:46be", "ASN":"206671"},
+    "GWams": {"Type":"Internal", "Name": "Amsterdam", "IPv6":"2001:19f0:5001:1b0:5400:04ff:fe52:46d7", "ASN":"206671"},
+     "R64ams": {"Type":"6in4", "Name": "Route64 Amsterdam", "IPv6":"2a0f:5707:abf8:96::1", "ASN":"212895", "Local_IPv6":"2a0f:5707:abf8:96::2/64", "Local_IPv4":"51.195.235.164", "Remote_IPv4":"198.140.141.168"},
+     "R64kans": {"Type":"6in4", "Name": "Route64 Kansas", "IPv6":"2a0f:5707:abf9:f::1", "ASN":"212895", "Local_IPv6":"2a0f:5707:abf9:f::2/64", "Local_IPv4":"198.244.131.14", "Remote_IPv4":"165.140.142.113"},
+
+         
+ };
 const { execFile } = require('child_process');
 for (let ID in Tunnels) {
     if (Tunnels[ID].Type == "6in4") {
