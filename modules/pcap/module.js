@@ -13,6 +13,7 @@ module.exports = async (Service)=>{
         const URL = req.url.split('/')
         console.log(URL)
         const Filename = URL[URL.length - 2] + "_" + (new Date()).getTime() + ".pcap"
+        console.log(Filename)
         const F = await fs.open("captures/" + Filename, "w")
         var size = 0
         req.on('data', (data)=>{
@@ -29,9 +30,9 @@ module.exports = async (Service)=>{
             }, 1000*60*60)
         })
     }
-    Service.ExpressRouter.all('/pcap/api/v1/*/upload', UploadHandler)
-    Service.ExpressRouter.all('/pcap/*/upload', UploadHandler)
-    Service.ExpressRouter.get('/pcap/captures/*', async(req, res)=>{
+    Service.ExpressRouter.all('/pcap/api/v1/:hostname/upload', UploadHandler)
+    Service.ExpressRouter.all('/pcap/:hostname/upload', UploadHandler)
+    Service.ExpressRouter.get('/pcap/captures/:file', async(req, res)=>{
         const URL = req.url.split('/')
         const Filename = URL[3]
         try {
