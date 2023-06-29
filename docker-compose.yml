@@ -1,7 +1,7 @@
 version: '2.1'
 services:
   nodejs:
-    image: ide.notmike.uk/tools
+    image: docker.notmike.net/toolkit/server
     build:
       context: .
       dockerfile: Dockerfile
