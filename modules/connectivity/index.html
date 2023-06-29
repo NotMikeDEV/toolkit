@@ -23,22 +23,18 @@
 </form>
 <script>
 window.OpenDialog = () => {
-    var Dialog = $('<DIV>').addClass('modal');
-    var Content = $('<DIV>');
-    Content.Close = ()=>{};
-    window.CloseDialog = (Popping) => {
-        Content.trigger('close');
-        if (Popping !== true)
-            window.history.pushState({},'', '?');
-        Dialog.remove();
-        delete window.CloseDialog;
+    var Window = $('<DIV>');
+    Window.Dialog = $('<DIV>').addClass('modal');
+    Window.Close = ()=> {
+        Window.trigger('close');
+        Window.Dialog.remove();
     };
-	$('<DIV>').addClass('modal-background').appendTo(Dialog).on('click', window.CloseDialog);
-	var ContentHolder = $('<DIV>').addClass('modal-content').appendTo(Dialog);
-	Content.addClass('box').appendTo(ContentHolder);
-	$('<BUTTON>').addClass('modal-close is-large').appendTo(Dialog).on('click', window.CloseDialog);
-    Dialog.appendTo($('body')).addClass("is-active");
-    return Content;
+	$('<DIV>').addClass('modal-background').appendTo(Window.Dialog).on('click', Window.Close);
+	Window.ContentHolder = $('<DIV>').addClass('modal-content').appendTo(Window.Dialog);
+    Window.addClass('box').appendTo(Window.ContentHolder);
+	$('<BUTTON>').addClass('modal-close is-large').appendTo(Window.Dialog).on('click', Window.Close);
+    Window.Dialog.appendTo($('body')).addClass("is-active");
+    return Window;
 }
 window.Server = {
     Resolve: async (Hostname) =>{
@@ -102,15 +98,16 @@ window.DoPing = async (Target) =>{
 window.DoTrace = async (Target) =>{
     $('#hostname').val(Target);
     const Dialog = window.OpenDialog();
+    Dialog.ContentHolder.width(800)
     const Output = $('<PRE>').appendTo(Dialog.empty());
     const Hostname = Target;
-    Output.text("Trace " + Hostname);
+    Output.text("Tracing to " + Hostname);
     const IPs = await window.Server.Resolve(Hostname);
     console.log("Resolved", Hostname, IPs);
     if (IPs.length < 1)
         return Output.text("Unable to resolve hostname " + Hostname);
     const IP = IPs[0];
-    Output.text("Trace " + Hostname + " (" + IP + "):\n");
+    Output.text("Tracing to " + Hostname + " (" + IP + ")...\n");
     let ID = await window.Server.Trace(IP);
     console.log("Trace", ID)
     var Recvd = ""
