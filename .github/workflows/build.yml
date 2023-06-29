@@ -1,0 +1,25 @@
+name: Build and push
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  pull:
+    runs-on: self-hosted
+    steps:
+    - run: rm -rf /tmp/toolkit
+    - run: cd /tmp && git clone https://github.com/NotMikeDEV/toolkit.git
+  
+  build:
+    needs: pull
+    runs-on: self-hosted
+    steps:
+    - run: cd /tmp/toolkit && sudo docker-compose build
+  push:
+    needs: build
+    runs-on: self-hosted
+    steps:
+    - run: cd /tmp/toolkit && sudo docker-compose push
