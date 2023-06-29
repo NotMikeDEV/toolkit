@@ -50,7 +50,7 @@ async function Init() {
 	Service.StaticFile = async(URL, Filename) => {
 		const Cache = await fs.readFile(Filename);
 		const Extension = Filename.indexOf('.')>-1?Filename.substr(Filename.lastIndexOf('.')):'sh';
-		return Service.ExpressRouter.get(URL, (req, res)=>{
+		return Service.ExpressRouter.all(URL, (req, res)=>{
 			res.type(Extension);
 			res.send(Cache);
 		});
@@ -70,7 +70,7 @@ async function Init() {
 		}
 		const Cache = Template.serialize();
 		if (URL)
-			Service.ExpressRouter.get(URL, (req, res)=>{
+			Service.ExpressRouter.all(URL, (req, res)=>{
 				res.set('Content-Type', 'text/html');
 				res.send(Cache);
 			});
