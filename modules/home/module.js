@@ -58,64 +58,68 @@ module.exports = async (Service)=>{
 		setTimeout(()=>socket.disconnect(true),15000);
 	});
 
-	Service.DNS.register('whoami.' + Service.Hostname, (Question, Response, Request)=>{
-		var IPAddress = IPAddr.parse(Request.address.address);
-		if (Question.type == 28) {
-			if (IPAddress.kind() == 'ipv6') {
-				Response.answer.push({ type: 28, class: 1,
-					name: 'whoami.' + Service.Hostname,
-					address: IPAddress.toString({format: 'v6'}),
-					ttl: 1,
-				});
-			} else {
-				Response.header.aa = false;
-				return Response.authority.push({ type: 2, class: 1,
-					name: 'whoami.' + Service.Hostname,
-					data: 'ipv6.' + Service.Hostname,
-					ttl: 1,
-				});
-			}
-		}
-		if (Question.type == 1) {
-			if (IPAddress.kind() == 'ipv4') {
-				Response.answer.push({ type: 1, class: 1,
-					name: 'whoami.' + Service.Hostname,
-					address: IPAddress.toString({format: 'v4'}),
-					ttl: 1
-				});
-			} else {
-				Response.header.aa = false;
-				return Response.authority.push({ type: 2, class: 1,
-					name: 'whoami.' + Service.Hostname,
-					data: 'ipv4.' + Service.Hostname,
-					ttl: 1,
-				});
-			}
-		}
-		Response.answer.push({ type: 16, class: 1,
-			name: 'whoami.' + Service.Hostname,
-			data: [ 'Query Time', (new Date()).toString() ],
-			ttl: 1,
-		});
-		Response.answer.push({ type: 16, class: 1,
-			name: 'whoami.' + Service.Hostname,
-			data: [ 'Query Source IP', IPAddress.toString({format: IPAddress.kind().substr(2)}) ],
-			ttl: 1,
-		});
-		Response.authority.push({ type: 2, class: 1,
-			name: 'whoami.' + Service.Hostname,
-			data: 'ipv4.' + Service.Hostname,
-			ttl: 30,
-		});
-		Response.authority.push({ type: 2, class: 1,
-			name: 'whoami.' + Service.Hostname,
-			data: 'ipv6.' + Service.Hostname,
-			ttl: 30,
-		});
-		Response.authority.push({ type: 2, class: 1,
-			name: 'whoami.' + Service.Hostname,
-			data: Service.Hostname,
-			ttl: 30,
-		});
-	});
+    function WhoAmI (Hostname) {
+        return (Question, Response, Request) => {
+            var IPAddress = IPAddr.parse(Request.address.address);
+            if (Question.type == 28) {
+                if (IPAddress.kind() == 'ipv6') {
+                    Response.answer.push({ type: 28, class: 1,
+                        name: Hostname,
+                        address: IPAddress.toString({format: 'v6'}),
+                        ttl: 1,
+                    });
+                } else {
+                    Response.header.aa = false;
+                    return Response.authority.push({ type: 2, class: 1,
+                        name: Hostname,
+                        data: 'ipv6.' + Service.Hostname,
+                        ttl: 1,
+                    });
+                }
+            }
+            if (Question.type == 1) {
+                if (IPAddress.kind() == 'ipv4') {
+                    Response.answer.push({ type: 1, class: 1,
+                        name: Hostname,
+                        address: IPAddress.toString({format: 'v4'}),
+                        ttl: 1
+                    });
+                } else {
+                    Response.header.aa = false;
+                    return Response.authority.push({ type: 2, class: 1,
+                        name: Hostname,
+                        data: 'ipv4.' + Service.Hostname,
+                        ttl: 1,
+                    });
+                }
+            }
+            Response.answer.push({ type: 16, class: 1,
+                name: Hostname,
+                data: [ 'Query Time', (new Date()).toString() ],
+                ttl: 1,
+            });
+            Response.answer.push({ type: 16, class: 1,
+                name: Hostname,
+                data: [ 'Query Source IP', IPAddress.toString({format: IPAddress.kind().substr(2)}) ],
+                ttl: 1,
+            });
+            Response.authority.push({ type: 2, class: 1,
+                name: Hostname,
+                data: 'ipv4.' + Service.Hostname,
+                ttl: 30,
+            });
+            Response.authority.push({ type: 2, class: 1,
+                name: Hostname,
+                data: 'ipv6.' + Service.Hostname,
+                ttl: 30,
+            });
+            Response.authority.push({ type: 2, class: 1,
+                name: Hostname,
+                data: Service.Hostname,
+                ttl: 30,
+            });
+        }
+    }
+	Service.DNS.register('whoami.' + Service.Hostname, WhoAmI('whoami.' + Service.Hostname))
+	Service.DNS.register('who.networktools.uk', WhoAmI('who.networktools.uk'))
 };
