@@ -120,6 +120,5 @@ module.exports = async (Service)=>{
             });
         }
     }
-	Service.DNS.register('whoami.' + Service.Hostname, WhoAmI('whoami.' + Service.Hostname))
-	Service.DNS.register('who.networktools.uk', WhoAmI('who.networktools.uk'))
+	Service.DNS.register('who.' + Service.Hostname, WhoAmI('who.networktools.uk'))
 };

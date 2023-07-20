@@ -1,24 +1,19 @@
-tools.as206671.uk {
-    reverse_proxy 127.0.0.1:8000 {
-        header_up X-Real-IP {http.request.remote.host}
-    }
-}
-ipv4.tools.as206671.uk {
-    reverse_proxy 127.0.0.1:8000 {
-        header_up X-Real-IP {http.request.remote.host}
-    }
-}
-ipv6.tools.as206671.uk {
-    reverse_proxy 127.0.0.1:8000 {
-        header_up X-Real-IP {http.request.remote.host}
-    }
-}
 networktools.uk {
     reverse_proxy 127.0.0.1:8000 {
         header_up X-Real-IP {http.request.remote.host}
     }
 }
 www.networktools.uk {
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Real-IP {http.request.remote.host}
+    }
+}
+ipv4.networktools.uk {
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Real-IP {http.request.remote.host}
+    }
+}
+ipv6.networktools.uk {
     reverse_proxy 127.0.0.1:8000 {
         header_up X-Real-IP {http.request.remote.host}
     }

@@ -14,7 +14,7 @@ caddy.on('close', (code)=>{console.log(`caddy process exited with code ${code}`)
 
 var Service = {
 		Data: {},
-		Hostname: 'tools.as206671.uk',
+		Hostname: 'networktools.uk',
 		Express: require('express')(),
 		DNS: require('./DNS.js'),
 };
