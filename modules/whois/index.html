@@ -1,0 +1,27 @@
+<title>AS206671 Whois Lookup</title>
+<form style="max-width: 500px;" class="box" id="dnslookup">
+	<div class="field is-horizontal">
+		<div class="field-label">
+			<label class="label">Whois Lookup on:</label>
+		</div>
+		<div class="field control">
+			<input class="input" name="hostname" placeholder="networktools.uk" />
+		</div>
+		<div class="field">
+			<input class="button" type="submit" value="Lookup" style="width:100%" />
+		</div>
+	</div>
+</form>
+<pre id="results">
+</pre>
+<script>
+$("#dnslookup").submit(()=>{
+	const Hostname = $('#dnslookup input[name^="hostname"]').val();
+	const ServerConnection = io('/whois/');
+	ServerConnection.send(Hostname||"networktools.uk", (Response)=>{
+			console.log(Response);
+			$('#results').text(Response)
+		});
+	return false;
+});
+</script>
