@@ -1,1 +1,1 @@
-export DOCKER_HOST=ssh://root@108.61.221.95
+export DOCKER_HOST=ssh://root@194.164.21.102
