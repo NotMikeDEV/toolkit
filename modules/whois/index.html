@@ -5,7 +5,7 @@
 			<label class="label">Whois Lookup on:</label>
 		</div>
 		<div class="field control">
-			<input class="input" name="hostname" placeholder="networktools.uk" />
+			<input id="hostname" class="input" name="hostname" placeholder="networktools.uk" />
 		</div>
 		<div class="field">
 			<input class="button" type="submit" value="Lookup" style="width:100%" />
@@ -15,13 +15,46 @@
 <pre id="results">
 </pre>
 <script>
+
 $("#dnslookup").submit(()=>{
-	const Hostname = $('#dnslookup input[name^="hostname"]').val();
+	const Hostname = $('#dnslookup input[name^="hostname"]').val()||"networktools.uk"
+	window.history.pushState({
+		"hostname":Hostname,
+		},Hostname, '?whois='+Hostname)
+	Lookup(Hostname)
+	return false
+})
+function Lookup(Hostname) {
+	$('#hostname').val(Hostname)
+	$('#results').text('Looking up ' + Hostname + '...')
 	const ServerConnection = io('/whois/');
-	ServerConnection.send(Hostname||"networktools.uk", (Response)=>{
-			console.log(Response);
-			$('#results').text(Response)
+	ServerConnection.send(Hostname, (Response)=>{
+			console.log(Response)
+			const Result = $('#results').empty()
+			if (Response.__raw||Response.error) {
+				$('<DIV>').appendTo(Result)
+					.text(Response.__raw||Response.error)
+			} else {
+				for (let Server in Response) {
+					$('<DIV>').appendTo(Result)
+						.addClass('has-text-success is-size-4')
+						.text(Server)
+					$('<DIV>').appendTo(Result)
+						.text(Response[Server].__raw||Response[Server].error)
+				}
+			}
 		});
 	return false;
-});
+}
+const QueryString = new URLSearchParams(window.location.search)
+const Query = QueryString.get('hostname')
+window.onpopstate = function(event) {
+	if (!event.state)
+		return
+	Lookup(event.state.hostname)
+}
+if (Query) {
+	Lookup(Query)
+	console.log('Query', Query)
+}
 </script>

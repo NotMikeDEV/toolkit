@@ -1,14 +1,16 @@
-var whois = require('whois')
+var whoiser = require('whoiser')
 
 module.exports = async (Service)=>{
 	Service.StaticPage('/whois/', 'modules/whois/index.html');
 
 	Service.IO.of('/whois/').on('connect', (socket) => {
 		socket.on('message', async(Request, Response) => {
-			whois.lookup(Request, function(err, data) {
-				console.log(data)
-				Response(data)
-			})
+			try {
+				const Data = await whoiser(Request, {raw:true})
+				Response(Data)
+			} catch(e) {
+				Response({error: e.message})
+			}
 		});
 	});
 };
