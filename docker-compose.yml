@@ -1,6 +1,6 @@
 version: '2.1'
 services:
-  nodejs:
+  server:
     image: docker.notmike.net/toolkit/server
     build:
       context: .
@@ -17,6 +17,14 @@ services:
     network_mode: host
     cap_add:
       - NET_ADMIN
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./
+          target: /opt/node/app/
+        - action: rebuild
+          path: package.json
+    stop_grace_period: 1s
   dns:
     container_name: bind
     image: cytopia/bind
