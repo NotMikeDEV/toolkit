@@ -30,10 +30,14 @@ module.exports = async (Service)=>{
             res.end()
         }, 20000)
 	});
-	Service.ExpressRouter.put('/speed/.up', (req,res)=>{
+	Service.ExpressRouter.post('/speed/.up', (req,res)=>{
 		req.on('abort', ()=>{
             res.end()
 		});
-        res.end()
+		req.on('data', (data)=>{
+		})
+		req.on('end', ()=>{
+            res.end()
+		});
     })
 }

@@ -6,6 +6,8 @@ RUN wget -O/dev/stdout https://deb.nodesource.com/setup_18.x | bash
 RUN apt-get install -y nodejs
 RUN mkdir -p /data
 RUN mkdir -p /home/node/app/node_modules
+WORKDIR /opt/tmp/
+RUN dd if=/dev/urandom of=down.dat bs=100M count=20
 WORKDIR /home/node/app
 COPY package*.json ./
 USER root
