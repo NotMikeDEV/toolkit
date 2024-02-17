@@ -3,35 +3,54 @@ $.ajax({
 	url: "https://ipv4.networktools.uk/.ip",
 	cache: false,
 }).done(function(IP) {
-	$("<SPAN>").appendTo(
-			$("<DIV>").appendTo($('#ipv4').empty()).text('Your IPv4 address is: ')
-		).text(IP).addClass('has-text-danger has-text-weight-semibold');
+	const IPv4Label = $("<DIV>").appendTo($('#ipv4').empty())
+		.text('Your IPv4 address is: ')
+
+	$("<SPAN>").appendTo(IPv4Label)
+		.text(IP)
+		.addClass('has-text-danger has-text-weight-semibold')
+		.css('cursor', 'pointer')
+		.click(()=>location.href='/whois/?hostname=' + IP)
 	$.ajax({
 		url: "/.rdns?ip=" + IP,
-	}).done(function(Hostname) {
-		$("<SPAN>").appendTo($("<DIV>").appendTo($('#ipv4')).text('IPv4 Hostname: '))
-		.text(Hostname).addClass('has-text-primary has-text-weight-semibold');
-	});
-});
+		}).done(function(Hostname) {
+			const IPv4HostnameLabel = $("<DIV>").appendTo($('#ipv4'))
+				.text('IPv4 Hostname: ')
+			$("<SPAN>").appendTo(IPv4HostnameLabel)
+				.addClass('has-text-primary has-text-weight-semibold')
+				.text(Hostname)
+				.css('cursor', 'pointer')
+				.click(()=>location.href='/dns/?server=&type=A&hostname=' + Hostname)
+		})
+})
 
  $.ajax({
 	url: "https://ipv6.networktools.uk/.ip",
 	cache: false,
 }).done(function(IP) {
-	$("<SPAN>").appendTo(
-			$("<DIV>").appendTo($('#ipv6').empty()).text('Your IPv6 address is: ')
-		).text(IP).addClass('has-text-danger has-text-weight-semibold');
+	const IPV6Label = $("<DIV>").appendTo($('#ipv6').empty())
+				.text('Your IPv6 address is: ')
+	$("<SPAN>").appendTo(IPV6Label)
+		.text(IP)
+		.addClass('has-text-danger has-text-weight-semibold')
+		.css('cursor', 'pointer')
+		.click(()=>location.href='/whois/?hostname=' + IP)
 	$.ajax({
 		url: "/.rdns?ip=" + IP,
-	}).done(function(Hostname) {
-		$("<SPAN>").appendTo($("<DIV>").appendTo($('#ipv6')).text('IPv6 Hostname: '))
-			.text(Hostname).addClass('has-text-primary has-text-weight-semibold');
-	});
-});
-if(location.protocol == 'http:')
-	location.href="https://"+location.hostname;
+		}).done(function(Hostname) {
+			const IPv6HostnameLabel = $("<DIV>").appendTo($('#ipv6'))
+				.text('IPv6 Hostname: ')
+			$("<SPAN>").appendTo(IPv6HostnameLabel)
+				.addClass('has-text-primary has-text-weight-semibold')
+				.text(Hostname)
+				.css('cursor', 'pointer')
+				.click(()=>location.href='/dns/?server=&type=AAAA&hostname=' + Hostname)
+		})
+})
+//if(location.protocol == 'http:')
+//	location.href="https://"+location.hostname
 
-var DNSTest = io('/.dns', {transports: ['websocket']});
+var DNSTest = io('/.dns', {transports: ['websocket']})
 DNSTest.on('connect', ()=>{
 	console.log("DNS Test Connect");
 	$('<DIV>').appendTo($("#dns"))

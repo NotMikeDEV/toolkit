@@ -31,7 +31,7 @@ services:
     restart: unless-stopped
     environment:
       - ALLOW_RECURSION=172.20.4.0/24
-      - DNS_FORWARDER=8.8.8.8,1.1.1.1,9.9.9.9
+#      - DNS_FORWARDER=8.8.8.8,1.1.1.1,9.9.9.9
     networks:
       tools:
         ipv4_address: 172.20.4.53

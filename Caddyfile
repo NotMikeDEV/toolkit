@@ -11,7 +11,33 @@ networktools.uk {
         header_up X-Real-IP {http.request.remote.host}
     }
 }
+networktools.uk:80 {
+	handle /speed/* {
+		redir http://networktools.uk:8080{uri} temporary
+	}
+	handle /speed/.down {
+		root * /opt/tmp
+		try_files /down.dat
+		file_server
+	}
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Real-IP {http.request.remote.host}
+    }
+}
 www.networktools.uk {
+	handle /speed/* {
+		redir http://networktools.uk:8080{uri} temporary
+	}
+	handle /speed/.down {
+		root * /opt/tmp
+		try_files /down.dat
+		file_server
+	}
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Real-IP {http.request.remote.host}
+    }
+}
+www.networktools.uk:80 {
 	handle /speed/* {
 		redir http://networktools.uk:8080{uri} temporary
 	}

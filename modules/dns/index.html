@@ -86,12 +86,13 @@ const RecordTypes = {
 	252: {Name: 'AXFR', Format: (Record)=> []},
 	255: {Name: 'ANY', Format: (Record)=> []}
 };
-let ServerConnection = null;
+window.ServerConnection = null;
 const DNSClient = window.Server = {
 	Execute: (Request)=>{
-		if (ServerConnection === null) {
-			ServerConnection = io('/dns/');
+		if (window.ServerConnection === null) {
+			window.ServerConnection = io('/dns/');
 			ServerConnection.Cache = {};
+			console.log('New Socket')
 		}
 		const RequestString = JSON.stringify(Request);
 		if (ServerConnection.Cache[RequestString]!==undefined)
@@ -339,7 +340,7 @@ window.onhashchange = function(event) {
 window.onpopstate = function(event) {
 	if (!event.state)
 		return;
-	window.DoLookup(event.state.hostname, event.state.type, event.state.server);
+	window.DoLookup(event.state.hostname, event.state.type, event.state.server)
 }
 $("#dnslookup").submit(()=>{
 	const Hostname = $('#dnslookup input[name^="hostname"]').val();
@@ -348,12 +349,12 @@ $("#dnslookup").submit(()=>{
 	const urlPath = '?hostname=' + encodeURIComponent(Hostname)
 		+ "&server=" + encodeURIComponent(Server)
 		+ "&type=" + encodeURIComponent(Type);
-	window.history.pushState({
+/*	window.history.pushState({
 		"hostname":Hostname,
 		"server":Server,
 		"type":Type,
 		},Hostname + " " + Type, urlPath);
-	window.DoLookup(Hostname, Type, Server);
-	return false;
+*/	window.DoLookup(Hostname, Type, Server)
+	return false
 });
 </script>

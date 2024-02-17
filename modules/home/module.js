@@ -55,7 +55,7 @@ module.exports = async (Service)=>{
 			console.log('WHOAMI DNS END ', socket.client.conn.remoteAddress);
 			Service.DNS.remove(TestHost);
 		});
-		setTimeout(()=>socket.disconnect(true),15000);
+		setTimeout(()=>socket.disconnect(true),60000);
 	});
 
     function WhoAmI (Hostname) {
