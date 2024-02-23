@@ -15,12 +15,11 @@
 <pre id="results">
 </pre>
 <script>
-
 $("#dnslookup").submit(()=>{
 	const Hostname = $('#dnslookup input[name^="hostname"]').val()||"networktools.uk"
 	window.history.pushState({
 		"hostname":Hostname,
-		},Hostname, '?whois='+Hostname)
+		},Hostname, '?hostname='+Hostname)
 	Lookup(Hostname)
 	return false
 })
