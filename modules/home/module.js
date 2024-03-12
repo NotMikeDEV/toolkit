@@ -32,20 +32,20 @@ module.exports = async (Service)=>{
 			var IPAddress = IPAddr.parse(Request.address.address);
 			Response.header.aa = false;
 			if (IPAddress.kind() == 'ipv4') {
-				Response.authority.push({ type: 2, class: 1,
-					name: TestHost,
-					data: 'ipv6.' + Service.Hostname,
-					ttl: 5,
-				});
 				IPAddress = IPAddress.toString({format: 'v4'});
 			} else {
-				Response.authority.push({ type: 2, class: 1,
-					name: TestHost,
-					data: 'ipv4.' + Service.Hostname,
-					ttl: 5,
-				});
 				IPAddress = IPAddress.toString({format: 'v6'});
 			}
+			Response.authority.push({ type: 2, class: 1,
+				name: TestHost,
+				data: 'ipv4.' + Service.Hostname,
+				ttl: 2,
+			});
+			Response.authority.push({ type: 2, class: 1,
+				name: TestHost,
+				data: 'ipv6.' + Service.Hostname,
+				ttl: 2,
+			});
 			console.log("WHOAMI DNS Request", IPAddress);
 			if (Request._socket._remote !== undefined)
 				socket.emit('DNS IP', IPAddress);

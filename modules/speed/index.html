@@ -11,14 +11,20 @@ class DownloadTester {
 	constructor(URL) {
 		this.DataStart = 0
 		this.DataTotal = 0
-		this.StartTime = new Date()
+		this.DataRate = 0
+		this.StartTime = undefined
 		this.Request = $.ajax({
 			xhr: ()=>{
 				const Request = new window.XMLHttpRequest()
 				Request.addEventListener("progress", (evt)=>{
-					this.DataTotal = evt.loaded
-					this.ElapsedTime = (new Date() - this.StartTime)/1000
-					this.DataRate = this.DataTotal/this.ElapsedTime
+					if (!this.StartTime) {
+						this.StartTime = new Date()
+						this.DataJunk = evt.loaded
+					} else {
+						this.DataTotal = evt.loaded - this.DataJunk
+						this.ElapsedTime = (new Date().getTime() - this.StartTime.getTime())/1000
+						this.DataRate = this.DataTotal/this.ElapsedTime
+					}
 				})
 				return Request
 			},
@@ -97,6 +103,7 @@ function UploadTest(Size) {
     while (Buffer.length < Size)
 		Buffer += Math.random().toString(36).substr(2)
 	const Tests = [
+		new UploadTester('/speed/.up', Buffer),
 		new UploadTester('/speed/.up', Buffer),
 	]
 	function Refresh() {

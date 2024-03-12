@@ -31,7 +31,7 @@ module.exports = async (Service)=>{
             const ID = Math.random().toString(36).substr(2)
             Response(ID)
             const Target = IPAddr.parse(IP);
-            const T = child_process.spawn("mtr", ['-w', , '-i', '0.1', '-Z', '1', '-c', '5', Target.toString()])
+            const T = child_process.spawn("mtr", ['-w', '-i', '0.1', '-Z', '1', '-c', '5', Target.toString()])
             T.stdout.on('data', (data) => {
                 socket.emit("trace-" + ID, data.toString())
                 console.log(data.toString())

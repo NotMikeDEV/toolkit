@@ -349,12 +349,12 @@ $("#dnslookup").submit(()=>{
 	const urlPath = '?hostname=' + encodeURIComponent(Hostname)
 		+ "&server=" + encodeURIComponent(Server)
 		+ "&type=" + encodeURIComponent(Type);
-/*	window.history.pushState({
+	window.history.pushState({
 		"hostname":Hostname,
 		"server":Server,
 		"type":Type,
 		},Hostname + " " + Type, urlPath);
-*/	window.DoLookup(Hostname, Type, Server)
+	window.DoLookup(Hostname, Type, Server)
 	return false
 });
 </script>
